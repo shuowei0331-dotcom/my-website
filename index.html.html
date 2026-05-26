@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校園闖關活動</title>
+
+<style>
+
+body{
+    margin:0;
+    padding:0;
+    background:#f3f5f7;
+    font-family:"Microsoft JhengHei";
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:30px;
+}
+
+.card{
+    background:white;
+    border-radius:25px;
+    padding:35px;
+    box-shadow:0 0 20px rgba(0,0,0,0.12);
+    text-align:center;
+    margin-top:30px;
+}
+
+h1{
+    color:#333;
+}
+
+h2{
+    color:#555;
+}
+
+input{
+    width:300px;
+    padding:14px;
+    border-radius:12px;
+    border:1px solid #ccc;
+    font-size:18px;
+}
+
+button{
+    background:#4A90E2;
+    color:white;
+    border:none;
+    border-radius:12px;
+    padding:12px 22px;
+    margin:8px;
+    font-size:17px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover{
+    transform:scale(1.05);
+    background:#3578c9;
+}
+
+.hidden{
+    display:none;
+}
+
+.image{
+    width:85%;
+    max-width:550px;
+    border-radius:18px;
+    margin-top:20px;
+}
+
+.number-btn{
+    width:58px;
+    height:58px;
+    font-size:24px;
+    margin:5px;
+}
+
+.selected{
+    background:#ff9800 !important;
+}
+
+.message{
+    color:red;
+    font-size:22px;
+    margin-top:15px;
+}
+
+.hint-box{
+    background:#f0f0f0;
+    padding:20px;
+    border-radius:15px;
+    margin-top:20px;
+    font-size:22px;
+}
+
+.success{
+    color:green;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- 首頁 -->
+<div class="card" id="startPage">
+
+<h1>校園闖關活動</h1>
+
+<p>請輸入【班級座號姓名】</p>
+
+<input type="text" id="playerName" placeholder="例如：20315 王小明">
+
+<br><br>
+
+<button onclick="startGame()">開始闖關</button>
+
+</div>
+
+<!-- 第一關 -->
+<div class="card hidden" id="level1">
+
+<h1>第一關</h1>
+
+<img class="image"
+src="https://drive.google.com/uc?export=view&id=1N15LSFl6P_AT8_hDSaG9vvFPqhfQkt_P">
+
+<h2>請選擇正確的四個數字</h2>
+
+<div id="numberArea"></div>
+
+<br>
+
+<button onclick="showHint1()">提示一</button>
+<button onclick="showHint2()">提示二</button>
+<button onclick="showHint3()">提示三</button>
+
+<div id="hintArea" class="hint-box hidden"></div>
+
+<br>
+
+<button onclick="checkLevel1()">確認答案</button>
+
+<div id="level1Message" class="message"></div>
+
+<div id="next1" class="hidden">
+<button onclick="goLevel2()">前往下一關</button>
+</div>
+
+</div>
+
+<!-- 第二關 -->
+<div class="card hidden" id="level2">
+
+<h1>第二關</h1>
+
+<h2>找出校園剪影對應地點</h2>
+
+<img class="image"
+src="https://drive.google.com/uc?export=view&id=1Syhe_5Q7xTCTWxNaNi_Q6Cl38PitGthu">
+
+<img class="image"
+src="https://drive.google.com/uc?export=view&id=1NLW_sbKhsEIiUa1yxlJSeAxJtShxCdq4">
+
+<img class="image"
+src="https://drive.google.com/uc?export=view&id=1COJzNC3Uhbi6d4XggTIQr3tKoscG-cCR">
+
+<h2>這是在哪一班教室旁？</h2>
+
+<input type="text" id="level2Answer" placeholder="輸入答案">
+
+<br><br>
+
+<button onclick="checkLevel2()">確認答案</button>
+
+<div id="level2Message" class="message"></div>
+
+<div id="next2" class="hidden">
+<button onclick="goLevel3()">前往下一關</button>
+</div>
+
+</div>
+
+<!-- 第三關 -->
+<div class="card hidden" id="level3">
+
+<h1>第三關</h1>
+
+<h2>找出明顯的三條錯誤</h2>
+
+<img class="image"
+src="https://drive.google.com/uc?export=view&id=1m7Vcri3NpSFVtqOj-Dj86J6WawTGECUp">
+
+<h2>找到後將題號相加</h2>
+
+<input type="text" id="level3Answer" placeholder="輸入答案">
+
+<br><br>
+
+<button onclick="checkLevel3()">確認答案</button>
+
+<div id="level3Message" class="message"></div>
+
+</div>
+
+<!-- 完成 -->
+<div class="card hidden" id="finishPage">
+
+<h1 id="finishText"></h1>
+
+</div>
+
+</div>
+
+<script>
+
+let player = "";
+let selectedNumbers = [];
+
+// 建立數字按鈕
+for(let i=0;i<=9;i++){
+
+    let btn = document.createElement("button");
+
+    btn.innerText = i;
+
+    btn.className = "number-btn";
+
+    btn.onclick = function(){
+        selectNumber(i, btn);
+    };
+
+    document.getElementById("numberArea").appendChild(btn);
+}
+
+// 開始遊戲
+function startGame(){
+
+    player = document.getElementById("playerName").value.trim();
+
+    if(player==""){
+        alert("請輸入班級座號姓名");
+        return;
+    }
+
+    document.getElementById("startPage").classList.add("hidden");
+    document.getElementById("level1").classList.remove("hidden");
+}
+
+// 選數字
+function selectNumber(num, btn){
+
+    if(selectedNumbers.includes(num)){
+
+        selectedNumbers = selectedNumbers.filter(n => n !== num);
+
+        btn.classList.remove("selected");
+
+    }else{
+
+        if(selectedNumbers.length >= 4){
+            return;
+        }
+
+        selectedNumbers.push(num);
+
+        btn.classList.add("selected");
+    }
+}
+
+// 提示一
+function showHint1(){
+
+    document.getElementById("hintArea").classList.remove("hidden");
+
+    document.getElementById("hintArea").innerHTML = `
+    <h2>井字提示</h2>
+
+    <img class="image"
+    src="https://drive.google.com/uc?export=view&id=1fU4EB7PJ1fFFD2jK-NJSUcsdtWGFX-7z">
+    `;
+}
+
+// 提示二
+function showHint2(){
+
+    document.getElementById("hintArea").classList.remove("hidden");
+
+    document.getElementById("hintArea").innerHTML =
+    `前面兩個數字是「永春」高中的筆劃`;
+}
+
+// 提示三
+function showHint3(){
+
+    document.getElementById("hintArea").classList.remove("hidden");
+
+    document.getElementById("hintArea").innerHTML =
+    `後面兩個數字是某個重要的日期`;
+}
+
+// 第一關答案
+function checkLevel1(){
+
+    let answer = [...selectedNumbers].sort().join('');
+    let correct = [5,9,6,2].sort().join('');
+
+    if(answer === correct){
+
+        document.getElementById("level1Message").innerHTML =
+        `<span class="success">答對了！</span>`;
+
+        document.getElementById("next1").classList.remove("hidden");
+
+    }else{
+
+        document.getElementById("level1Message").innerHTML =
+        "答案錯誤，請再嘗試";
+
+        setTimeout(()=>{
+            document.getElementById("level1Message").innerHTML = "";
+        },2500);
+    }
+}
+
+// 前往第二關
+function goLevel2(){
+
+    document.getElementById("level1").classList.add("hidden");
+
+    document.getElementById("level2").classList.remove("hidden");
+}
+
+// 第二關答案
+function checkLevel2(){
+
+    let ans = document.getElementById("level2Answer").value.trim();
+
+    if(ans=="104班"){
+
+        document.getElementById("level2Message").innerHTML =
+        `<span class="success">答對了！</span>`;
+
+        document.getElementById("next2").classList.remove("hidden");
+
+    }else{
+
+        document.getElementById("level2Message").innerHTML =
+        "答案錯誤，請再嘗試";
+
+        setTimeout(()=>{
+            document.getElementById("level2Message").innerHTML = "";
+        },2500);
+    }
+}
+
+// 前往第三關
+function goLevel3(){
+
+    document.getElementById("level2").classList.add("hidden");
+
+    document.getElementById("level3").classList.remove("hidden");
+}
+
+// 第三關答案
+function checkLevel3(){
+
+    let ans = document.getElementById("level3Answer").value.trim();
+
+    if(ans=="12"){
+
+        document.getElementById("level3").classList.add("hidden");
+
+        document.getElementById("finishPage").classList.remove("hidden");
+
+        document.getElementById("finishText").innerHTML =
+        `恭喜 ${player} 完成闖關！`;
+
+    }else{
+
+        document.getElementById("level3Message").innerHTML =
+        "答案錯誤，請再嘗試";
+
+        setTimeout(()=>{
+            document.getElementById("level3Message").innerHTML = "";
+        },2500);
+    }
+}
+
+</script>
+
+</body>
+</html>
